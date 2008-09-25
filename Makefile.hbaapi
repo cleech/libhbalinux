@@ -1,0 +1,53 @@
+#
+# Makefile for hbaapi_src_2.2
+#
+
+CC = cc
+LD = ld
+RM = rm
+CHMOD = chmod
+CHOWN = chown
+LDCONFIG = ldconfig
+INSTALL = install
+
+DATE=`date "+%D-%T"`
+CFLAGS += -DBUILD_DATE="\"${DATE}\""
+CFLAGS += -fPIC -DVENDOR='"Intel Corporation"' \
+	  -DREVISION='"Rev 2.2"' -DREVNUM=2 -DMINREVNUM=2 \
+	  -DLICENSE='"Subject to SNIA Public License"'
+
+ifeq ($(shell uname -i),x86_64)
+	LDFLAGS += -G
+	HBA_ID="org.openfc64"
+	HBAAPI_INSTALL_DIR = /usr/lib64
+	LIBHBALINUX_INSTALL_DIR = /usr/local/lib64
+else
+	CFLAGS += -m32
+	LDFLAGS += -melf_i386 -G
+	HBA_ID="org.openfc"
+	HBAAPI_INSTALL_DIR = /usr/lib
+	LIBHBALINUX_INSTALL_DIR = /usr/local/lib
+endif
+
+all: libHBAAPI.so
+
+libHBAAPI.so: HBAAPILIB.c hbaapi.h vendorhbaapi.h
+	@echo '       CC PIC' $<
+	@$(CC) $(CFLAGS) -c HBAAPILIB.c
+	@echo '       LINK' $<
+	@$(LD) $(LDFLAGS) HBAAPILIB.o -o libHBAAPI.so
+
+clean:
+	@$(RM) -f *.o *.so > /dev/null 2>&1
+
+install: libHBAAPI.so
+	@echo '       INSTALL' $<
+	@$(INSTALL) libHBAAPI.so $(HBAAPI_INSTALL_DIR)
+	@echo "$(HBA_ID) $(LIBHBALINUX_INSTALL_DIR)/libhbalinux.so" > /etc/hba.conf
+	@$(CHMOD) 644 /etc/hba.conf
+	@$(CHOWN) root.root /etc/hba.conf
+	@$(LDCONFIG)
+
+uninstall:
+	@$(RM) -f $(HBAAPI_INSTALL_DIR)/libHBAAPI.so > /dev/null 2>&1
+	@$(RM) -f /etc/hba.conf > /dev/null 2>&1

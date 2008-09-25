@@ -1,0 +1,57 @@
+                      Linux* HBAAPI Vendor Library
+                      ============================
+
+Introduction
+------------
+
+HBAAPI stands for Host Bus Adapter API (Applications Programming Interface).
+It is a C-level shared library to manage Fibre Channel Host Bus Adapters.
+The HBAAPI library source code may be downloaded from http://sourceforge.net/.
+For a detailed description of HBAAPI please see the FC-HBA working draft in
+http://www.t11.org/index.html. The HBAAPI shared library will also be built
+when the vendor library is built, and will be named as libHBAAPI.so.
+
+The HBAAPI vendor library is a shared library with functions that support
+the API routines in the HBAAPI library. The HBAAPI vendor library will be
+named as libhbalinux.so and is loaded by the HBAAPI library as a dynamic
+library when the HBAAPI library is initialized. The vendor library invokes
+the /sys file system for information of FCoE network adapters, local ports,
+remote ports and discovered LUNs. It also gets adapter information with
+the assistance from libpciaccess while the information are not available in
+/sys. The ioctl calls are only used for SG_IO to issue SCSI commands to
+generic scsi block devices. No ioctl are called to the libfc.ko or fcoe.ko
+modules.
+
+When applications are developed to link with libHBAAPI.so, they may
+indirectly invoke libhbalinux.so behind the libHBAAPI.so. For instructions
+of how to build and install the libraries, please see the file INSTALL.
+
+
+In This Release
+---------------
+
+This release of the vendor library is implemented in association with the
+version 2.2 (August 2002) of HBAAPI code from Source Forge.
+
+The supported API's in this release are:
+
+    HBA_GetVersion
+    HBA_LoadLibrary
+    HBA_FreeLibrary
+    HBA_RegisterLibrary
+    HBA_GetNumberOfAdapters
+    HBA_GetAdapterName
+    HBA_OpenAdapter
+    HBA_CloseAdapter
+    HBA_GetAdapterAttributes
+    HBA_GetAdapterPortAttributes
+    HBA_GetPortStatistics
+    HBA_GetFC4Statistics
+    HBA_GetFcpTargetMappingV2
+    HBA_ScsiInquiryV2
+    HBA_ScsiReadCapacityV2
+
+Libhbalinux is maintained at www.Open-FCoE.org and the latest version can
+be obtained there. Questions, comments and contributions should take place
+on the development mailing list at www.Open-FCoE.org as well.
+

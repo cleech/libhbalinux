@@ -1,0 +1,7 @@
+39a40
+> #include <stddef.h>
+40a42
+> #include <stdlib.h>
+41a44,45
+> #include <string.h>
+> #define __USE_XOPEN
