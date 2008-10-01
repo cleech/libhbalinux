@@ -98,8 +98,7 @@ static HBA_ENTRYPOINTSV2 vendor_lib_entrypoints = {
     /* Next function deprecated but still supported */
     .SendRNIDHandler =                         NULL,
     .ScsiInquiryHandler =                      scsi_inquiry_v1,
-    .ReportLUNsHandler =                       NULL,
-					/* scsi_report_luns_v1, */
+    .ReportLUNsHandler =                       scsi_report_luns_v1,
     .ReadCapacityHandler =                     scsi_read_capacity_v1,
 
     /* V2 handlers */
@@ -120,8 +119,7 @@ static HBA_ENTRYPOINTSV2 vendor_lib_entrypoints = {
     .RemoveAllPersistentBindingsHandler =      NULL,
     .SendRNIDV2Handler =                       NULL,
     .ScsiInquiryV2Handler =                    scsi_inquiry_v2,
-    .ScsiReportLUNsV2Handler =                 NULL,
-					/* scsi_report_luns_v2, */
+    .ScsiReportLUNsV2Handler =                 scsi_report_luns_v2,
     .ScsiReadCapacityV2Handler =               scsi_read_capacity_v2,
     .GetVendorLibraryAttributesHandler =       NULL,
 					/* get_vendor_lib_attrs, */

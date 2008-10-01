@@ -47,8 +47,13 @@ The supported API's in this release are:
     HBA_GetAdapterPortAttributes
     HBA_GetPortStatistics
     HBA_GetFC4Statistics
+    HBA_GetFcpTargetMapping
     HBA_GetFcpTargetMappingV2
+    HBA_SendScsiInquiry
+    HBA_SendReportLUNs
+    HBA_SendReadCapacity
     HBA_ScsiInquiryV2
+    HBA_ScsiReportLUNsV2
     HBA_ScsiReadCapacityV2
 
 Libhbalinux is maintained at www.Open-FCoE.org and the latest version can
