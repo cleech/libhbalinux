@@ -263,6 +263,7 @@ get_binding_target_mapping_v1(HBA_HANDLE handle, HBA_FCPTARGETMAPPING *map)
 	ctxt.oc_handle = handle;
 	ctxt.oc_kern_hba = ap->ad_kern_index;
 	ctxt.oc_port = -1;
+	ctxt.oc_target = -1;
 	ctxt.oc_lun = -1;
 	ctxt.oc_limit = map->NumberOfEntries;
 	ctxt.oc_ver = 1;
