@@ -1,5 +1,5 @@
 #
-# Makefile for libhbalinux
+# Makefile for libhbalinux/src
 #
 
 #
