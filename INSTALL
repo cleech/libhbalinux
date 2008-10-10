@@ -38,6 +38,9 @@ and patch it.
 Build and install the libraries
 -------------------------------
 
+NOTE: Because the HBAAPI vendor library invokes the libpciaccess
+      library.  The libpciaccess-devel package must be installed.
+
 1) Build and install the libraries.
 
    cd hbalinux
