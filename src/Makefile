@@ -57,7 +57,7 @@ LIBRARIES = -lrt -lpciaccess
 #DATE=`date "+%D-%T"`
 DATE=`date "+%Y/%m/%d %T %Z"`
 CFLAGS += -DBUILD_DATE="\"${DATE}\""
-CFLAGS += -fPIC -O0 -g -Wall -Wall -Werror
+CFLAGS += -fPIC -O0 -g -Wall -Werror
 CFLAGS += -I.
 CFLAGS += -I../include
 CFLAGS += -I../hbaapi_src_2.2

@@ -65,7 +65,7 @@ enum fc_port_type {
 };
 
 #define fc_enum_name_search(title, table_type, table) \
-static const enum fc_port_type get_fc_##title##_value(const char *table_key) \
+static enum fc_port_type get_fc_##title##_value(const char *table_key) \
 { \
 	int i; enum fc_port_type value = 0; \
 	for (i = 0; i < ARRAY_SIZE(table); i++) { \

@@ -69,9 +69,15 @@ get_device_serial_number(struct pci_device *dev, struct hba_info *hba_info)
 		rc = pci_device_cfg_read_u8(dev, &cap_id,
 					    offset + PCI_CAP_LIST_ID);
 		if (rc) {
+#if defined(__x86_64__)
 			fprintf(stderr,
 				"Failed reading capability ID at 0x%lx\n",
 				offset + PCI_CAP_LIST_ID);
+#elif defined(__i386__)
+			fprintf(stderr,
+				"Failed reading capability ID at 0x%llx\n",
+				offset + PCI_CAP_LIST_ID);
+#endif
 			return;
 		}
 
@@ -79,10 +85,15 @@ get_device_serial_number(struct pci_device *dev, struct hba_info *hba_info)
 			rc = pci_device_cfg_read_u8(dev, &next_cap,
 						    offset + PCI_CAP_LIST_NEXT);
 			if (rc) {
-				fprintf(stderr,
-					"Failed reading next capability "
+#if defined(__x86_64__)
+				fprintf(stderr, "Failed reading next capability "
 					"offset at 0x%lx\n",
 					offset + PCI_CAP_LIST_NEXT);
+#elif defined(__i386__)
+				fprintf(stderr, "Failed reading next capability "
+					"offset at 0x%llx\n",
+					offset + PCI_CAP_LIST_NEXT);
+#endif
 				return;
 			}
 			offset = (pciaddr_t)next_cap;
