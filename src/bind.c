@@ -58,7 +58,8 @@ struct binding_context {
 	HBA_STATUS            oc_status;
 	char                  oc_sg[32];    /* SCSI-generic dev name */
 	HBA_SCSIID            *oc_scp;      /* place for OS device name */
-	struct port_info *oc_rport;    /* target remote port, if known */
+	struct port_info      *oc_rport;    /* target remote port, if known */
+	char                  oc_path[256]; /* parent dir save area */
 };
 
 /*
@@ -133,11 +134,27 @@ set_binding_support(HBA_HANDLE handle, HBA_WWN wwn, HBA_BIND_CAPABILITY flags)
 }
 
 static int
+get_deprecated_device_name(struct dirent *dp, void *arg)
+{
+	struct binding_context *cp = arg;
+
+	if (strstr(cp->oc_path, "block"))
+		snprintf(cp->oc_scp->OSDeviceName,
+			 sizeof(cp->oc_scp->OSDeviceName),
+			 "/dev/%s", dp->d_name);
+	if (strstr(cp->oc_path, "scsi_generic"))
+		snprintf(cp->oc_sg, sizeof(cp->oc_sg),
+			 "/dev/%s", dp->d_name);
+	return 0;
+}
+
+static int
 get_binding_os_names(struct dirent *dp, void *arg)
 {
 	struct binding_context *cp = arg;
 	char *name = dp->d_name;
 	char *sep;
+	char buf[sizeof(cp->oc_scp->OSDeviceName)];
 
 	sep = strchr(name, ':');
 	if (dp->d_type == DT_LNK && sep != NULL) {
@@ -152,6 +169,22 @@ get_binding_os_names(struct dirent *dp, void *arg)
 				 "/dev/%s", sep + 1);
 		}
 		*sep = ':';                 /* not really needed */
+	} else if (dp->d_type == DT_DIR && sep == NULL) {
+		if ((!strcmp(name, "block")) ||
+		    (!strcmp(name, "scsi_generic"))) {
+			/* save the original path */
+			sa_strncpy_safe(buf, sizeof(buf),
+					cp->oc_path, sizeof(cp->oc_path));
+
+			snprintf(cp->oc_path, sizeof(cp->oc_path),
+				"%s/%s", buf, name);
+			sa_dir_read(cp->oc_path,
+				get_deprecated_device_name, cp);
+
+			/* restore the original path */
+			sa_strncpy_safe(cp->oc_path, sizeof(cp->oc_path),
+					buf, sizeof(buf));
+		}
 	}
 	return 0;
 }
@@ -231,6 +264,9 @@ get_binding_target_mapping(struct dirent *dp, void *ctxt_arg)
 		cp->oc_sg[0] = '\0';
 		cp->oc_scp = scp;
 		scp->OSDeviceName[0] = '\0';
+		/* save a copy of the dir name */
+		sa_strncpy_safe(cp->oc_path, sizeof(cp->oc_path),
+				name, sizeof(name));
 		sa_dir_read(name, get_binding_os_names, cp);
 		scp->ScsiBusNumber = hba;
 		scp->ScsiTargetNumber = tgt;
@@ -348,6 +384,6 @@ get_binding_sg_name(struct port_info *lp, HBA_WWN disc_wwpn,
 	sa_dir_read(SYSFS_LUN_DIR, get_binding_target_mapping, &ctxt);
 	if (ctxt.oc_count != 1)
 		return ENOENT;
-	strncpy(buf, ctxt.oc_sg, len);
+	sa_strncpy_safe(buf, len, ctxt.oc_sg, sizeof(ctxt.oc_sg));
 	return 0;
 }
