@@ -101,7 +101,6 @@ counting_rports(struct dirent *dp, void *arg)
 static int
 sysfs_scan(struct dirent *dp, void *arg)
 {
-	int lport_count = 0;
 	HBA_ADAPTERATTRIBUTES *atp;
 	HBA_PORTATTRIBUTES *pap;
 	HBA_WWN wwnn;
@@ -112,9 +111,6 @@ sysfs_scan(struct dirent *dp, void *arg)
 	char ifname[20], buf[256];
 	char *driverName;
 	int data[32], rc, i;
-
-	/* Found a local port! */
-	lport_count++;
 
 	/*
 	 * Create a new HBA entry (ap) for the local port
