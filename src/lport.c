@@ -111,6 +111,9 @@ sysfs_scan(struct dirent *dp, void *arg)
 	char ifname[20], buf[256];
 	char *driverName;
 	int data[32], rc, i;
+	char *cp;
+
+	memset(&hba_info, 0, sizeof(hba_info));
 
 	/*
 	 * Create a new HBA entry (ap) for the local port
@@ -154,12 +157,63 @@ sysfs_scan(struct dirent *dp, void *arg)
 	snprintf(host_dir, sizeof(host_dir),
 		SYSFS_HOST_DIR "/%s", dp->d_name);
 
-	/* Get the ifname from the symbolic_name */
 	rc = sa_sys_read_line(host_dir, "symbolic_name", buf, sizeof(buf));
-	sa_strncpy_safe(ifname, sizeof(ifname),
-			strstr(buf, "over") + 5, sizeof(ifname));
-	snprintf(hba_dir, sizeof(hba_dir),
-		 SYSFS_HBA_DIR "/%s/device", ifname);
+
+	/* Get PortSymbolicName */
+	sa_strncpy_safe(pap->PortSymbolicName, sizeof(pap->PortSymbolicName),
+			buf, sizeof(buf));
+
+	/* Skip the HBA if it isn't OpenFC */
+	cp = strstr(pap->PortSymbolicName, " over ");
+	if (!cp)
+		goto skip;
+
+	/*
+	 * See if host_dir is a PCI device directory
+	 * If not, try it as a net device.
+	 */
+	i = readlink(host_dir, buf, sizeof(buf) - 1);
+	if (i < 0)
+		goto skip;
+	buf[i] = '\0';
+
+	if (strstr(buf, "devices/pci")) {
+		snprintf(hba_dir, sizeof(hba_dir), "%s/device/..", host_dir);
+	} else {
+		/* assume a net device */
+		cp += 6;
+		sa_strncpy_safe(ifname, sizeof(ifname), cp, strlen(cp));
+		snprintf(hba_dir, sizeof(hba_dir), SYSFS_HBA_DIR "/%s/device",
+			ifname);
+		i = readlink(hba_dir, buf, sizeof(buf) - 1);
+		if (i < 0) {
+			printf("readlink %s failed\n", hba_dir);
+			goto skip;
+		}
+		buf[i] = '\0';
+	}
+
+	/*
+	 * Assume a PCI symlink value is in buf.
+	 * Back up to the last path component that looks like a PCI element.
+	 * A sample link value is like:
+	 * ../devices/pci*.../0000:00:07.0/0000:06:00.4/host2/fc_host/host2
+	 */
+	rc = 0;
+	do {
+		cp = strrchr(buf, '/');
+		if (!cp)
+			break;
+		rc = sscanf(cp + 1, "%x:%x:%x.%x",
+			    &hba_info.domain, &hba_info.bus,
+			    &hba_info.dev, &hba_info.func);
+		if (rc == 4)
+			break;
+		*cp = '\0';
+	} while (cp && cp > buf);
+
+	if (rc != 4)
+		goto skip;
 
 	/*
 	 * Save the host directory and the hba directory
@@ -167,10 +221,6 @@ sysfs_scan(struct dirent *dp, void *arg)
 	 */
 	sa_strncpy_safe(pp->host_dir, sizeof(pp->host_dir),
 			host_dir, sizeof(host_dir));
-
-	/* Get PortSymbolicName */
-	sa_strncpy_safe(pap->PortSymbolicName, sizeof(pap->PortSymbolicName),
-			buf, sizeof(buf));
 
 	/* Get NodeWWN */
 	rc = sys_read_wwn(pp->host_dir, "node_name", &wwnn);
@@ -285,15 +335,6 @@ sysfs_scan(struct dirent *dp, void *arg)
 	/*
 	 * Get Hardware Information via PCI Library
 	 */
-	i = readlink(hba_dir, buf, sizeof(buf));
-	if (i < 0) {
-		printf("readlink %s failed\n", hba_dir);
-		return HBA_STATUS_ERROR;
-	}
-	buf[i] = '\0';
-	sscanf(strrchr(buf, '/') + 1, "%x:%x:%x.%x",
-		&hba_info.domain, &hba_info.bus,
-		&hba_info.dev, &hba_info.func);
 	(void) find_pci_device(&hba_info);
 
 	/* Get Number of Ports */
