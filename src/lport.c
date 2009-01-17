@@ -142,7 +142,8 @@ sysfs_scan(struct dirent *dp, void *arg)
 			"%s: malloc for local port %d failed,"
 			" errno=0x%x\n", __func__,
 			ap->ad_port_count - 1, errno);
-		return HBA_STATUS_ERROR;
+		free(ap);
+		return 0;
 	}
 
 	memset(pp, 0, sizeof(*pp));
@@ -260,7 +261,7 @@ sysfs_scan(struct dirent *dp, void *arg)
 		fprintf(stderr,
 			"%s: insert of HBA %d port %d failed\n",
 			__func__, ap->ad_kern_index, pp->ap_index);
-		free(pp);
+		goto skip;
 	}
 
 	/* Create adapter name */
@@ -297,9 +298,7 @@ sysfs_scan(struct dirent *dp, void *arg)
 	sscanf(strrchr(buf, '/') + 1, "%x:%x:%x.%x",
 		&hba_info.domain, &hba_info.bus,
 		&hba_info.dev, &hba_info.func);
-	rc = find_pci_device(&hba_info);
-	if (rc != HBA_STATUS_OK)
-		return rc;
+	(void) find_pci_device(&hba_info);
 
 	/* Get Number of Ports */
 	atp->NumberOfPorts = hba_info.NumberOfPorts;
@@ -354,10 +353,8 @@ sysfs_scan(struct dirent *dp, void *arg)
 	/* Get DriverName */
 	snprintf(drv_dir, sizeof(drv_dir), "%s" SYSFS_MODULE , hba_dir);
 	i = readlink(drv_dir, buf, sizeof(buf));
-	if (i < 0) {
-		printf("Fatal! readlink %s failed\n", drv_dir);
-		return HBA_STATUS_ERROR;
-	}
+	if (i < 0)
+		i = 0;
 	buf[i] = '\0';
 	if (!strstr(buf, "module")) {
 		/*
@@ -381,7 +378,12 @@ sysfs_scan(struct dirent *dp, void *arg)
 		adapter_destroy(ap);      /* free adapter and ports */
 	}
 
-	return HBA_STATUS_OK;
+	return 0;
+
+skip:
+	free(pp);
+	free(ap);
+	return 0;
 }
 
 void
