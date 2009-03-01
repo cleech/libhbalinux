@@ -1,0 +1,52 @@
+Name:           libhbalinux
+Version:        @PACKAGE_VERSION@
+Release:        1%{?dist}
+Summary:        FC-HBAAPI implementation using scsi_transport_fc interfaces
+
+Group:          System Environment/Libraries
+License:        LGPLv2
+URL:            http://www.open-fcoe.org
+Source0:        http://www.open-fcoe.org/openfc/%{name}-%{version}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildRequires:  libHBAAPI-devel libpciaccess-devel
+Requires:       libHBAAPI
+
+%description
+SNIA HBAAPI vendor library built on top of the scsi_transport_fc interfaces
+
+%prep
+%setup -q
+
+
+%build
+%configure --disable-static
+make %{?_smp_mflags}
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT
+find $RPM_BUILD_ROOT -name '*.la' -exec rm -f {} ';'
+find $RPM_BUILD_ROOT -name '*.so' -exec rm -f {} ';'
+
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+
+%files
+%defattr(-,root,root,-)
+%doc README
+%{_libdir}/*.so.*
+
+
+%changelog
+* Tue Feb 24 2009 Chris Leech <christopher.leech@intel.com> - 2.2-1
+- initial build
+
