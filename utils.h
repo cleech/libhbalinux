@@ -38,8 +38,8 @@
 #include <pthread.h>
 #include <limits.h>
 #include <scsi/sg.h>
-#include "hbaapi.h"
-#include "vendorhbaapi.h"
+#include <hbaapi.h>
+#include <vendorhbaapi.h>
 #include "fc_types.h"
 
 /*
