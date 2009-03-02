@@ -7,5 +7,5 @@ fc_scsi.h fc_types.h lib.c lport.c net_types.h pci.c rport.c scsi.c sg.c \
 utils.c utils.h
 libhbalinux_la_LDFLAGS = -version-info 2:2:0
 
-dist_noinst_DATA = libhbalinux.spec
+dist_noinst_DATA = README COPYING INSTALL libhbalinux.spec
 
