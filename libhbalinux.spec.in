@@ -48,6 +48,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
-* Tue Feb 24 2009 Chris Leech <christopher.leech@intel.com> - 2.2-1
+* Mon Mar 2 2009 Chris Leech <christopher.leech@intel.com> - 1.0.7-1
 - initial build
 
