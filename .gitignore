@@ -1,0 +1,29 @@
+# standard autotools stuff
+.deps/
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.guess
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+missing
+
+# other autoconf generated files
+libhbalinux.spec
+
+# compile generated files
+*.o
+*.lo
+*.la
+.libs
+
+# build.sh generated files
+libhbalinux-*.tar.gz
+libhbalinux-*.rpm
