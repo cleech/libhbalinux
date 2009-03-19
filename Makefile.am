@@ -10,3 +10,22 @@ libhbalinux_la_LIBADD = $(PCIACCESS_LIBS)
 
 dist_noinst_DATA = README COPYING INSTALL libhbalinux.spec
 
+install-data-hook: libhbalinux.la
+	. $<; \
+	ORG=org.open-fcoe.libhbalinux; \
+	LIB=${libdir}/$${dlname}; \
+	STR="$$ORG	$$LIB"; \
+	CONF=${sysconfdir}/hba.conf; \
+	if test -f $$CONF; then \
+		grep -E -q ^[[:space:]]*$$ORG[[:space:]]+$$LIB $$CONF; \
+		if test $$? -ne 0; then \
+			echo $$STR >> $$CONF; \
+		else \
+			echo "** $$CONF already configured"; \
+			echo "** system configuration not updated"; \
+		fi; \
+	else \
+		echo "** WARNING: $$CONF does not exist"; \
+		echo "** system configuration not updated"; \
+	fi
+
