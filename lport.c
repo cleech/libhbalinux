@@ -30,9 +30,9 @@
  * collect these information.
  */
 #define HBA_MODEL               "(Unknown)"
-#define HBA_ROM_VERSION         "(None)"
-#define HBA_FW_VERSION          "(None)"
-#define HBA_VENDOR_SPECIFIC_ID  123456
+#define HBA_ROM_VERSION         ""
+#define HBA_FW_VERSION          ""
+#define HBA_VENDOR_SPECIFIC_ID  0
 
 /*
  * Convert fc_port_type values to ascii string name.
