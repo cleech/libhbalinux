@@ -177,7 +177,7 @@ sysfs_scan(struct dirent *dp, void *arg)
 		goto skip;
 	buf[i] = '\0';
 
-	if (strstr(buf, "devices/pci")) {
+	if (strstr(buf, "devices/pci") && !strstr(buf, "/net/")) {
 		snprintf(hba_dir, sizeof(hba_dir), "%s/device/..", host_dir);
 	} else {
 		/* assume a net device */
