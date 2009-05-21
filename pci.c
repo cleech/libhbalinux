@@ -158,11 +158,6 @@ get_pci_device_info(struct pci_device *dev, struct hba_info *hba_info)
 	u_int8_t hdr_type;
 	char *unknown = "Unknown";
 
-	hba_info->vendor_id = dev->vendor_id;
-	hba_info->device_id = dev->device_id;
-	hba_info->subsystem_vendor_id = dev->subvendor_id;
-	hba_info->subsystem_device_id = dev->subdevice_id;
-
 	name = pci_device_get_vendor_name(dev);
 	if (!name)
 		name = unknown;
@@ -178,12 +173,9 @@ get_pci_device_info(struct pci_device *dev, struct hba_info *hba_info)
 			name, sizeof(hba_info->ModelDescription));
 
 	/*
-	 * Reading device class and revision from PCIe
+	 * Reading hardware revision from PCIe
 	 * configuration header space.
 	 */
-	pci_device_cfg_read_u16(dev, &class, PCI_CLASS_DEVICE);
-	hba_info->device_class = class;
-
 	pci_device_cfg_read_u8(dev, &revision, PCI_REVISION_ID);
 	snprintf(hba_info->HardwareVersion,
 		 sizeof(hba_info->HardwareVersion),
