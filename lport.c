@@ -29,7 +29,6 @@
  * The following are temporary settings until we can find a way to
  * collect these information.
  */
-#define HBA_MODEL               "(Unknown)"
 #define HBA_ROM_VERSION         ""
 #define HBA_FW_VERSION          ""
 #define HBA_VENDOR_SPECIFIC_ID  0
@@ -112,6 +111,7 @@ sysfs_scan(struct dirent *dp, void *arg)
 	char *driverName;
 	int data[32], rc, i;
 	char *cp;
+	char *saveptr;	/* for strtok_r */
 
 	memset(&hba_info, 0, sizeof(hba_info));
 
@@ -348,9 +348,6 @@ sysfs_scan(struct dirent *dp, void *arg)
 	sa_strncpy_safe(atp->SerialNumber, sizeof(atp->SerialNumber),
 			hba_info.SerialNumber, sizeof(hba_info.SerialNumber));
 
-	/* Get Model (TODO) */
-	sa_strncpy_safe(atp->Model, sizeof(atp->Model),
-			HBA_MODEL, sizeof(HBA_MODEL));
 
 	/* Get ModelDescription */
 	sa_strncpy_safe(atp->ModelDescription, sizeof(atp->ModelDescription),
@@ -364,7 +361,37 @@ sysfs_scan(struct dirent *dp, void *arg)
 			hba_info.subsystem_vendor_id,
 			hba_info.subsystem_device_id,
 			hba_info.device_class);
+		/*
+		 * Get Model
+		 *
+		 * If the device is a newly developed product, and
+		 * the model description is not in pci.ids yet, use
+		 * the model description constructed above as the
+		 * model string.
+		 */
+		sa_strncpy_safe(atp->Model, sizeof(atp->Model),
+				atp->ModelDescription,
+				sizeof(atp->ModelDescription));
 	}
+
+	/*
+	 * Get Model
+	 *
+	 * If the device name has already been added into
+	 * the pci.ids file, use the first word of the model
+	 * description as the model. If the space after the
+	 * first word is not found (new product), use the
+	 * model description as the model.
+	 */
+	sa_strncpy_safe(buf, sizeof(buf), atp->ModelDescription,
+			sizeof(atp->ModelDescription));
+	if (strtok_r(buf, " ", &saveptr))
+		sa_strncpy_safe(atp->Model, sizeof(atp->Model),
+				buf, strnlen(buf, sizeof(buf)));
+	else
+		sa_strncpy_safe(atp->Model, sizeof(atp->Model),
+				atp->ModelDescription,
+				sizeof(atp->ModelDescription));
 
 	/* Get HardwareVersion */
 	sa_strncpy_safe(atp->HardwareVersion, sizeof(atp->HardwareVersion),
