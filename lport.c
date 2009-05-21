@@ -356,6 +356,15 @@ sysfs_scan(struct dirent *dp, void *arg)
 	sa_strncpy_safe(atp->ModelDescription, sizeof(atp->ModelDescription),
 			hba_info.ModelDescription,
 			sizeof(hba_info.ModelDescription));
+	if (!strncmp(hba_info.ModelDescription, "Unknown",
+		 sizeof(hba_info.ModelDescription))) {
+		snprintf(atp->ModelDescription, sizeof(atp->ModelDescription),
+			"[%04x:%04x]-[%04x:%04x]-(%04x)",
+			hba_info.vendor_id, hba_info.device_id,
+			hba_info.subsystem_vendor_id,
+			hba_info.subsystem_device_id,
+			hba_info.device_class);
+	}
 
 	/* Get HardwareVersion */
 	sa_strncpy_safe(atp->HardwareVersion, sizeof(atp->HardwareVersion),
