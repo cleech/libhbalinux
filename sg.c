@@ -75,6 +75,7 @@ sg_issue_inquiry(const char *file, HBA_UINT8 cdb_byte1,
 		rc = errno;
 		fprintf(stderr, "%s: SG_IO error. file %s, errno=0x%x\n",
 			__func__, file, errno);
+		close(fd);
 		return HBA_STATUS_ERROR;
 	}
 	close(fd);
@@ -199,6 +200,7 @@ sg_issue_read_capacity(const char *file, void *resp, HBA_UINT32 *resp_lenp,
 		rc = errno;
 		fprintf(stderr, "%s: SG_IO error. file %s, errno=0x%x\n",
 			__func__, file, errno);
+		close(fd);
 		return HBA_STATUS_ERROR;
 	}
 	close(fd);
@@ -251,6 +253,7 @@ sg_issue_report_luns(const char *file, void *resp, HBA_UINT32 *resp_lenp,
 		rc = errno;
 		fprintf(stderr, "%s: SG_IO error. file %s, errno=0x%x\n",
 			__func__, file, errno);
+		close(fd);
 		return HBA_STATUS_ERROR;
 	}
 	close(fd);
