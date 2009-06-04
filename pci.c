@@ -138,11 +138,10 @@ get_device_serial_number(struct pci_device *dev, struct hba_info *hba_info)
 						     &dword_high, offset + 8);
 			snprintf(hba_info->SerialNumber,
 				 sizeof(hba_info->SerialNumber),
-				"%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x\n",
-				dword_low & 0xff, (dword_low >> 8) & 0xff,
-				(dword_low >> 16) & 0xff, dword_low >> 24,
-				dword_high & 0xff, (dword_high >> 8) & 0xff,
-				(dword_high >> 16) & 0xff, dword_high >> 24);
+				 "%02X%02X%02X%02X%02X%02X\n",
+				 dword_high >> 24, (dword_high >> 16) & 0xff,
+				 (dword_high >> 8) & 0xff, (dword_low >> 16) & 0xff,
+				 (dword_low >> 8) & 0xff, dword_low & 0xff);
 			break;
 		} while (offset);
 		break;
