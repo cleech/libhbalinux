@@ -1,0 +1,25 @@
+This document explains how to build the Linux vendor
+library for the HBA API.
+
+##
+# libhbalinux
+##############
+
+DEPENDENCIES
+
+* HBA API Wrapper Library
+
+* autoconf
+* autotools
+* sysconftool
+* automake
+* libtool
+* libpciaccess-devel
+
+PROCESS
+
+1) Bootstrap, configure, make and make install
+   # ./bootstrap.sh
+   # rpm --eval "%configure" | sh
+   # make
+   # make install
