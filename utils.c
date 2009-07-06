@@ -339,9 +339,11 @@ sa_table_search(struct sa_table *tp, void *(*match)(void *ep, void *arg),
 
 	for (i = 0; i < tp->st_limit; i++) {
 		ep = tp->st_table[i];
-		found = (*match)(ep, arg);
-		if (ep != NULL && found != NULL)
-			break;
+		if (ep != NULL) {
+			found = (*match)(ep, arg);
+			if (found != NULL)
+				break;
+		}
 	}
 	return found;
 }
