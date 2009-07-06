@@ -98,6 +98,62 @@ counting_rports(struct dirent *dp, void *arg)
 }
 
 static int
+check_ifmac(struct dirent *dp, void *arg)
+{
+	char *address = (char *)arg;
+	char hba_dir[256];
+	char buf[256];
+	int len, i, rc;
+
+	snprintf(hba_dir, sizeof(hba_dir),
+		 SYSFS_HBA_DIR "/%s", dp->d_name);
+	i = readlink(hba_dir, buf, sizeof(buf) - 1);
+	if (i < 0) {
+		printf("readlink %s failed\n", hba_dir);
+		return 0;
+	}
+	buf[i] = '\0';
+	if (strstr(buf, "/virtual/net/"))
+		return 0;	/* skip virtual devices */
+
+	memset(buf, 0, sizeof(buf));
+	rc = sa_sys_read_line(hba_dir, "address", buf, sizeof(buf));
+	if (rc)
+		return 0;
+	len = strnlen(buf, sizeof(buf));
+	if (!strncmp(address, buf, len)) {
+		strncpy(address, dp->d_name, len);
+		return 1;
+	}
+	return 0;
+}
+
+/*
+ * find_phys_if - find the regular network interface name that
+ *                has the same mac address as the VLAN interface.
+ *                This ifname will be used to find the PCI info
+ *                of a VLAN interface.
+ * hba_dir: hba_dir of VLAN interface.
+ * buf: returns ifname of regular network interface.
+ */
+static int
+find_phys_if(char *hba_dir, char *buf, size_t len)
+{
+	int rc;
+
+	/* Get the mac address of VLAN interface */
+	rc = sa_sys_read_line(hba_dir, "address", buf, len);
+	if (rc)
+		return 1;
+	/*
+	 * Search for the regular network interface and
+	 * return the interface name in the buf.
+	 */
+	sa_dir_read(SYSFS_HBA_DIR, check_ifmac, buf);
+	return 0;
+}
+
+static int
 sysfs_scan(struct dirent *dp, void *arg)
 {
 	HBA_ADAPTERATTRIBUTES *atp;
@@ -183,21 +239,44 @@ sysfs_scan(struct dirent *dp, void *arg)
 		/* assume a net device */
 		cp += 6;
 		sa_strncpy_safe(ifname, sizeof(ifname), cp, strlen(cp));
-		snprintf(hba_dir, sizeof(hba_dir), SYSFS_HBA_DIR "/%s/device",
-			ifname);
+		snprintf(hba_dir, sizeof(hba_dir),
+			 SYSFS_HBA_DIR "/%s", ifname);
 		i = readlink(hba_dir, buf, sizeof(buf) - 1);
 		if (i < 0) {
 			printf("readlink %s failed\n", hba_dir);
 			goto skip;
 		}
 		buf[i] = '\0';
+		if (strstr(buf, "/virtual/net/")) {
+			memset(buf, 0, sizeof(buf));
+			rc = find_phys_if(hba_dir, buf, sizeof(buf));
+			if (rc)
+				goto skip;
+			snprintf(hba_dir, sizeof(hba_dir),
+				 SYSFS_HBA_DIR "/%s", buf);
+			i = readlink(hba_dir, buf, sizeof(buf) - 1);
+			if (i < 0) {
+				printf("readlink %s failed\n", hba_dir);
+				goto skip;
+			}
+			buf[i] = '\0';
+		}
+		/*
+		 * A sample link value here is like:
+		 *	../../devices/pci*.../0000:03:00.0/net/eth2
+		 */
+		cp = strstr(buf, "/net/");
+		if (!cp)
+			goto skip;
+		*cp = '\0';
+		strcat(hba_dir, "/device");
 	}
 
 	/*
 	 * Assume a PCI symlink value is in buf.
 	 * Back up to the last path component that looks like a PCI element.
 	 * A sample link value is like:
-	 * ../devices/pci*.../0000:00:07.0/0000:06:00.4/host2/fc_host/host2
+	 *	../../devices/pci*.../0000:03:00.0
 	 */
 	rc = 0;
 	do {
