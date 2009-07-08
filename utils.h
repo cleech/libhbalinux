@@ -19,6 +19,7 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>

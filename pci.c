@@ -152,7 +152,6 @@ static void
 get_pci_device_info(struct pci_device *dev, struct hba_info *hba_info)
 {
 	const char *name;
-	u_int16_t class;
 	u_int8_t revision;
 	u_int8_t hdr_type;
 	char *unknown = "Unknown";
