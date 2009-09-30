@@ -98,31 +98,21 @@ counting_rports(struct dirent *dp, void *arg)
 }
 
 static int
-check_ifmac(struct dirent *dp, void *arg)
+check_ifindex(struct dirent *dp, void *arg)
 {
-	char *address = (char *)arg;
+	char *ifindex = (char *)arg;
 	char hba_dir[256];
 	char buf[256];
-	int len, i, rc;
+	int rc;
 
 	snprintf(hba_dir, sizeof(hba_dir),
 		 SYSFS_HBA_DIR "/%s", dp->d_name);
-	i = readlink(hba_dir, buf, sizeof(buf) - 1);
-	if (i < 0) {
-		printf("readlink %s failed\n", hba_dir);
-		return 0;
-	}
-	buf[i] = '\0';
-	if (strstr(buf, "/virtual/net/"))
-		return 0;	/* skip virtual devices */
-
 	memset(buf, 0, sizeof(buf));
-	rc = sa_sys_read_line(hba_dir, "address", buf, sizeof(buf));
+	rc = sa_sys_read_line(hba_dir, "ifindex", buf, sizeof(buf) - 1);
 	if (rc)
 		return 0;
-	len = strnlen(buf, sizeof(buf));
-	if (!strncmp(address, buf, len)) {
-		strncpy(address, dp->d_name, len);
+	if (!strncmp(ifindex, buf, sizeof(buf))) {
+		strcpy(arg, dp->d_name);
 		return 1;
 	}
 	return 0;
@@ -130,7 +120,7 @@ check_ifmac(struct dirent *dp, void *arg)
 
 /*
  * find_phys_if - find the regular network interface name that
- *                has the same mac address as the VLAN interface.
+ *                has the ifindex that matches the specified iflink.
  *                This ifname will be used to find the PCI info
  *                of a VLAN interface.
  * hba_dir: hba_dir of VLAN interface.
@@ -141,15 +131,14 @@ find_phys_if(char *hba_dir, char *buf, size_t len)
 {
 	int rc;
 
-	/* Get the mac address of VLAN interface */
-	rc = sa_sys_read_line(hba_dir, "address", buf, len);
+	rc = sa_sys_read_line(hba_dir, "iflink", buf, len);
 	if (rc)
 		return 1;
 	/*
 	 * Search for the regular network interface and
 	 * return the interface name in the buf.
 	 */
-	sa_dir_read(SYSFS_HBA_DIR, check_ifmac, buf);
+	sa_dir_read(SYSFS_HBA_DIR, check_ifindex, buf);
 	return 0;
 }
 
@@ -163,11 +152,15 @@ sysfs_scan(struct dirent *dp, void *arg)
 	struct adapter_info *ap;
 	struct port_info *pp;
 	char host_dir[80], hba_dir[80], drv_dir[80];
+	struct stat stat_buf;
+	char dev_dir[128];
 	char ifname[20], buf[256];
 	char *driverName;
 	int data[32], rc, i;
 	char *cp;
 	char *saveptr;	/* for strtok_r */
+	unsigned int ifindex;
+	unsigned int iflink;
 
 	memset(&hba_info, 0, sizeof(hba_info));
 
@@ -225,12 +218,13 @@ sysfs_scan(struct dirent *dp, void *arg)
 		goto skip;
 
 	/*
-	 * See if host_dir is a PCI device directory
+	 * See if <host_dir>/device is a PCI symlink.
 	 * If not, try it as a net device.
 	 */
-	i = readlink(host_dir, buf, sizeof(buf) - 1);
+	snprintf(dev_dir, sizeof(dev_dir), "%s/device", host_dir);
+	i = readlink(dev_dir, buf, sizeof(buf) - 1);
 	if (i < 0)
-		goto skip;
+		i = 0;
 	buf[i] = '\0';
 
 	if (strstr(buf, "devices/pci") && !strstr(buf, "/net/")) {
@@ -241,35 +235,30 @@ sysfs_scan(struct dirent *dp, void *arg)
 		sa_strncpy_safe(ifname, sizeof(ifname), cp, strlen(cp));
 		snprintf(hba_dir, sizeof(hba_dir),
 			 SYSFS_HBA_DIR "/%s", ifname);
-		i = readlink(hba_dir, buf, sizeof(buf) - 1);
-		if (i < 0) {
-			printf("readlink %s failed\n", hba_dir);
+		/*
+		 * Try as VLAN device or other virtual net device.
+		 * If this is the case, ifindex and iflink will be different.
+		 * iflink is the ifindex of the physical device.
+		 */
+		rc = sa_sys_read_u32(hba_dir, "ifindex", &ifindex);
+		if (rc < 0)
 			goto skip;
-		}
-		buf[i] = '\0';
-		if (strstr(buf, "/virtual/net/")) {
-			memset(buf, 0, sizeof(buf));
+		rc = sa_sys_read_u32(hba_dir, "iflink", &iflink);
+		if (rc < 0)
+			goto skip;
+		if (ifindex != iflink) {
 			rc = find_phys_if(hba_dir, buf, sizeof(buf));
 			if (rc)
 				goto skip;
-			snprintf(hba_dir, sizeof(hba_dir),
-				 SYSFS_HBA_DIR "/%s", buf);
-			i = readlink(hba_dir, buf, sizeof(buf) - 1);
-			if (i < 0) {
-				printf("readlink %s failed\n", hba_dir);
-				goto skip;
-			}
-			buf[i] = '\0';
+			strncpy(ifname, buf, sizeof(ifname));
 		}
-		/*
-		 * A sample link value here is like:
-		 *	../../devices/pci*.../0000:03:00.0/net/eth2
-		 */
-		cp = strstr(buf, "/net/");
-		if (!cp)
+
+		snprintf(hba_dir, sizeof(hba_dir),
+			 SYSFS_HBA_DIR "/%s/device", ifname);
+		i = readlink(hba_dir, buf, sizeof(buf) - 1);
+		if (i < 0)
 			goto skip;
-		*cp = '\0';
-		strcat(hba_dir, "/device");
+		buf[i] = '\0';
 	}
 
 	/*
