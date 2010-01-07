@@ -11,7 +11,7 @@ libhbalinux_la_LIBADD = $(PCIACCESS_LIBS)
 dist_noinst_DATA = README COPYING INSTALL libhbalinux.spec
 
 install-data-hook: libhbalinux.la
-	. $<; \
+	. $${PWD}/$<; \
 	ORG=org.open-fcoe.libhbalinux; \
 	LIB=${libdir}/$${dlname}; \
 	STR="$$ORG	$$LIB"; \
