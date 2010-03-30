@@ -80,7 +80,7 @@ sysfs_get_rport(struct dirent *dp, void *arg)
 	rc |= sys_read_wwn(rport_dir, "port_name", &rpa->PortWWN);
 	rc |= sa_sys_read_u32(rport_dir, "port_id", &rpa->PortFcId);
 	rc |= sa_sys_read_u32(rport_dir, "scsi_target_id", &rp->ap_scsi_target);
-	rc |= sa_sys_read_line(rport_dir, "maxframe_size", buf, sizeof(buf));
+	sa_sys_read_line(rport_dir, "maxframe_size", buf, sizeof(buf));
 	sscanf(buf, "%d", &rpa->PortMaxFrameSize);
 	rc |= sys_read_port_state(rport_dir, "port_state", &rpa->PortState);
 	rc |= sys_read_classes(rport_dir, "supported_classes",
