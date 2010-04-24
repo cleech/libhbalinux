@@ -251,7 +251,7 @@ get_binding_target_mapping(struct dirent *dp, void *ctxt_arg)
 			fcp->FcId = pp->ap_attr.PortFcId;
 			fcp->NodeWWN = pp->ap_attr.NodeWWN;
 			fcp->PortWWN = pp->ap_attr.PortWWN;
-			fcp->FcpLun = (HBA_UINT64) lun << 48;
+			fcp->FcpLun = (HBA_UINT64) lun;
 		}
 
 		/*
@@ -364,11 +364,6 @@ get_binding_sg_name(struct port_info *lp, HBA_WWN disc_wwpn,
 	if (rp == NULL)
 		return HBA_STATUS_ERROR_ILLEGAL_WWN;
 
-	/*
-	 * Check for LUN more than 1023 or multi-level.
-	 */
-	if (fc_lun & ((0xfc01ULL << 48) - 1))
-		return HBA_STATUS_ERROR;
 	memset(&ctxt, 0, sizeof(ctxt));
 	memset(&entry, 0, sizeof(entry));
 	ctxt.oc_rport = rp;
@@ -377,7 +372,7 @@ get_binding_sg_name(struct port_info *lp, HBA_WWN disc_wwpn,
 	ctxt.oc_target = rp->ap_scsi_target;
 	if (ctxt.oc_target == -1)
 		return ENOENT;
-	ctxt.oc_lun = fc_lun >> 48;
+	ctxt.oc_lun = (int) fc_lun;
 	ctxt.oc_limit = 1;
 	ctxt.oc_ver = 1;
 	ctxt.oc_entries = &entry;
