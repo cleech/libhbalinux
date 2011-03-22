@@ -357,7 +357,10 @@ sysfs_scan(struct dirent *dp, void *arg)
 	/* Get PortSupportedClassofService */
 	rc = sa_sys_read_line(pp->host_dir, "supported_classes",
 				buf, sizeof(buf));
-	pap->PortSupportedClassofService = *(strstr(buf, "Class") + 6) - '0';
+
+	cp = strstr(buf, "Class");
+	if (cp)
+		pap->PortSupportedClassofService = *(cp + 6) - '0';
 
 	/* Get OSDeviceName */
 	sa_strncpy_safe(pap->OSDeviceName, sizeof(pap->OSDeviceName),
