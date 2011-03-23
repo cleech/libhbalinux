@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#include <linux/types.h>
+#include <sys/types.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <stddef.h>
