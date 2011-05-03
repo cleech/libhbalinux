@@ -152,7 +152,6 @@ sysfs_scan(struct dirent *dp, void *arg)
 	struct adapter_info *ap;
 	struct port_info *pp;
 	char host_dir[80], hba_dir[80], drv_dir[80];
-	struct stat stat_buf;
 	char dev_dir[128];
 	char ifname[20], buf[256];
 	char *driverName;
