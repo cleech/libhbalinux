@@ -34,24 +34,19 @@
 #define HBA_VENDOR_SPECIFIC_ID  0
 
 /*
- * Convert fc_port_type values to ascii string name.
- * (This table is copied from scsi_transport_fc.c).
+ * table of /sys port types strings to HBA-API values.
  */
-static struct {
-	enum fc_port_type	value;
-	char			*name;
-} port_types_table[] = {
-    { FC_PORTTYPE_UNKNOWN,     "Unknown" },
-    { FC_PORTTYPE_OTHER,       "Other" },
-    { FC_PORTTYPE_NOTPRESENT,  "Not Present" },
-    { FC_PORTTYPE_NPORT,       "NPort (fabric via point-to-point)" },
-    { FC_PORTTYPE_NLPORT,      "NLPort (fabric via loop)" },
-    { FC_PORTTYPE_LPORT,       "LPort (private loop)" },
-    { FC_PORTTYPE_PTP,         "Point-To-Point (direct nport connection)" },
-    { FC_PORTTYPE_NPIV,        "NPIV VPORT" },
+struct sa_nameval port_types_table[] = {
+	{ "Unknown",		HBA_PORTTYPE_UNKNOWN },
+	{ "Other",		HBA_PORTTYPE_OTHER },
+	{ "Not Present", 	HBA_PORTTYPE_NOTPRESENT },
+	{ "NPort (fabric via point-to-point)",	HBA_PORTTYPE_NPORT },
+	{ "NLPort (fabric via loop)",	HBA_PORTTYPE_NLPORT },
+	{ "LPort (private loop)",	HBA_PORTTYPE_LPORT },
+	{ "Point-To-Point (direct nport connection)", 	HBA_PORTTYPE_PTP },
+	{  "NPIV VPORT",	HBA_PORTTYPE_NPORT },
+	{ NULL, 0 }
 };
-fc_enum_name_search(port_type, fc_port_type, port_types_table)
-#define FC_PORTTYPE_MAX_NAMELEN         50
 
 /*
  * table of /sys port state strings to HBA-API values.
@@ -301,7 +296,7 @@ sysfs_scan(struct dirent *dp, void *arg)
 
 	/* Get PortType */
 	rc = sa_sys_read_line(pp->host_dir, "port_type", buf, sizeof(buf));
-	pap->PortType = get_fc_port_type_value(buf);
+	rc = sa_enum_encode(port_types_table, buf, &pap->PortType);
 
 	/* Get PortState */
 	rc = sa_sys_read_line(pp->host_dir, "port_state", buf, sizeof(buf));

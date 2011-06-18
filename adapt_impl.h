@@ -52,31 +52,6 @@ struct hba_info {
 #define MAX_DRIVER_NAME_LEN	20
 #define ARRAY_SIZE(a)		(sizeof(a)/sizeof((a)[0]))
 
-/* fc_port_type: copied from scsi_transport_fc.h */
-enum fc_port_type {
-	FC_PORTTYPE_UNKNOWN,
-	FC_PORTTYPE_OTHER,
-	FC_PORTTYPE_NOTPRESENT,
-	FC_PORTTYPE_NPORT,		/* Attached to FPort */
-	FC_PORTTYPE_NLPORT,		/* (Public) Loop w/ FLPort */
-	FC_PORTTYPE_LPORT,		/* (Private) Loop w/o FLPort */
-	FC_PORTTYPE_PTP,		/* Point to Point w/ another NPort */
-	FC_PORTTYPE_NPIV,		/* VPORT based on NPIV */
-};
-
-#define fc_enum_name_search(title, table_type, table) \
-static enum fc_port_type get_fc_##title##_value(const char *table_key) \
-{ \
-	int i; enum fc_port_type value = 0; \
-	for (i = 0; i < ARRAY_SIZE(table); i++) { \
-		if (!strcmp(table[i].name, table_key)) { \
-			value = table[i].value; \
-			break; \
-		} \
-	} \
-	return value; \
-}
-
 HBA_STATUS sysfs_get_port_stats(char *dir, HBA_PORTSTATISTICS *sp);
 HBA_STATUS sysfs_get_port_fc4stats(char *dir, HBA_FC4STATISTICS *fc4sp);
 
