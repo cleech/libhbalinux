@@ -343,6 +343,8 @@ get_binding_target_mapping_v2(HBA_HANDLE handle, HBA_WWN wwn,
 	memset(map->entry, 0, sizeof(map->entry[0]) * ctxt.oc_limit);
 	sa_dir_read(SYSFS_LUN_DIR, get_binding_target_mapping, &ctxt);
 	map->NumberOfEntries = ctxt.oc_count;
+	if (ctxt.oc_status == HBA_STATUS_OK && ctxt.oc_count > ctxt.oc_limit)
+		ctxt.oc_status = HBA_STATUS_ERROR_MORE_DATA;
 	return ctxt.oc_status;
 }
 
