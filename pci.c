@@ -153,7 +153,6 @@ get_pci_device_info(struct pci_device *dev, struct hba_info *hba_info)
 {
 	const char *name;
 	u_int8_t revision;
-	u_int8_t hdr_type;
 	char *unknown = "Unknown";
 
 	name = pci_device_get_vendor_name(dev);
@@ -179,15 +178,7 @@ get_pci_device_info(struct pci_device *dev, struct hba_info *hba_info)
 		 sizeof(hba_info->HardwareVersion),
 		 "%02x", revision);
 
-	/*
-	 * Determine if the HBA is a single-function
-	 * or multi-function adapter.
-	 */
-	pci_device_cfg_read_u8(dev, &hdr_type, PCI_HEADER_TYPE);
-	if (hdr_type == 0x80)
-		hba_info->NumberOfPorts = 2;
-	else
-		hba_info->NumberOfPorts = 1;
+	hba_info->NumberOfPorts = 1;
 
 	/*
 	 * Searching for serial number in PCIe extended
