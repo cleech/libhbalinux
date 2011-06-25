@@ -69,13 +69,55 @@ struct sa_nameval port_states_table[] = {
  * table of /sys port speed strings to HBA-API values.
  */
 struct sa_nameval port_speeds_table[] = {
-	{ "10 Gbit",        HBA_PORTSPEED_10GBIT },
-	{ "2 Gbit",         HBA_PORTSPEED_2GBIT },
-	{ "1 Gbit",         HBA_PORTSPEED_1GBIT },
-	{ "Not Negotiated", HBA_PORTSPEED_NOT_NEGOTIATED },
 	{ "Unknown",        HBA_PORTSPEED_UNKNOWN },
+	{ "1 Gbit",         HBA_PORTSPEED_1GBIT },
+	{ "2 Gbit",         HBA_PORTSPEED_2GBIT },
+	{ "10 Gbit",        HBA_PORTSPEED_10GBIT },
+	{ "Not Negotiated", HBA_PORTSPEED_NOT_NEGOTIATED },
 	{ NULL, 0 }
 };
+
+/*
+ * parse strings from /sys port speed/support_speeds files
+ * and convert them to bitmasks for the HBA_PORTSPEED supported
+ * Format expected: "1 Gbit[, 10 Gbit]", etc.
+ */
+static int sys_read_speed(const char *dir, const char *file, char *buf,
+			  size_t buflen, HBA_PORTSPEED *speeds)
+{
+	int rc = 0;
+	u_int32_t val = 0;
+	int len = 0;
+	char *cp;
+	struct sa_nameval *tp = port_speeds_table;
+
+	rc = sa_sys_read_line(dir, file, buf, buflen);
+	if (rc == 0 && strstr(buf, "Unknown") == NULL) {
+		for (cp = buf; *cp != '\0';) {
+			for (; tp->nv_name != NULL; tp++) {
+				len = strlen(tp->nv_name);
+				if (strncasecmp(tp->nv_name, cp, len) == 0) {
+					val |= tp->nv_val;
+					cp += len;
+					break;
+				}
+			}
+			if (*cp == '\0')
+				break;
+			if (*cp == ',') {
+				cp++;
+				if (*cp == ' ')
+					cp++;
+			}
+			else
+				break; /* invalid string */
+		}
+	}
+
+	*speeds = val;
+
+	return rc;
+}
 
 /*
  * Code for OpenFC-supported adapters.
@@ -303,13 +345,14 @@ sysfs_scan(struct dirent *dp, void *arg)
 	rc = sa_enum_encode(port_states_table, buf, &pap->PortState);
 
 	/* Get PortSpeed */
-	rc = sa_sys_read_line(pp->host_dir, "speed", buf, sizeof(buf));
-	rc = sa_enum_encode(port_speeds_table, buf, &pap->PortSpeed);
+	rc = sys_read_speed(pp->host_dir, "speed",
+				buf, sizeof(buf),
+				&pap->PortSpeed);
 
 	/* Get PortSupportedSpeed */
-	rc = sa_sys_read_line(pp->host_dir, "supported_speed",
-				buf, sizeof(buf));
-	rc = sa_enum_encode(port_speeds_table, buf, &pap->PortSupportedSpeed);
+	rc = sys_read_speed(pp->host_dir, "supported_speeds",
+				buf, sizeof(buf),
+				&pap->PortSupportedSpeed);
 
 	/* Get PortMaxFrameSize */
 	rc = sa_sys_read_line(pp->host_dir, "maxframe_size", buf, sizeof(buf));
