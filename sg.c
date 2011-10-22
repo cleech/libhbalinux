@@ -167,6 +167,7 @@ sg_issue_read_capacity(const char *file, void *resp, HBA_UINT32 *resp_lenp,
 {
 	struct sg_io_hdr hdr;
 	struct scsi_rcap10 cmd;
+	struct scsi_rcap16 cmd_16;
 	size_t len;
 	int fd;
 	int rc;
@@ -180,17 +181,31 @@ sg_issue_read_capacity(const char *file, void *resp, HBA_UINT32 *resp_lenp,
 		return errno;
 	}
 	memset(&hdr, 0, sizeof(hdr));
-	memset(&cmd, 0, sizeof(cmd));
 
-	cmd.rc_op = SCSI_OP_READ_CAP10;
+	/* If the response buffer size is enough to
+	 * accomodate READ CAPACITY(16) response issue
+	 * SCSI READ CAPACITY(16) else issue
+	 * SCSI READ CAPACITY(10)
+	 */
+	if (len >= sizeof(struct scsi_rcap16_resp)) {
+		memset(&cmd_16, 0, sizeof(cmd_16));
+		cmd_16.rc_op = SCSI_OP_SA_IN_16;
+		cmd_16.rc_sa = SCSI_SA_READ_CAP16;
+		ua_net32_put(&cmd_16.rc_alloc_len, len);
+		hdr.cmd_len = sizeof(cmd_16);
+		hdr.cmdp = (unsigned char *) &cmd_16;
+	} else {
+		memset(&cmd, 0, sizeof(cmd));
+		cmd.rc_op = SCSI_OP_READ_CAP10;
+		hdr.cmd_len = sizeof(cmd);
+		hdr.cmdp = (unsigned char *) &cmd;
+	}
 
 	hdr.interface_id = 'S';
 	hdr.dxfer_direction = SG_DXFER_FROM_DEV;
-	hdr.cmd_len = sizeof(cmd);
 	hdr.mx_sb_len = *sense_lenp;
 	hdr.dxfer_len = len;
 	hdr.dxferp = (unsigned char *) resp;
-	hdr.cmdp = (unsigned char *) &cmd;
 	hdr.sbp = (unsigned char *) sense;
 	hdr.timeout = UINT_MAX;
 	hdr.timeout = 3000;                     /* mS to wait for result */
