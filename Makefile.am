@@ -8,7 +8,10 @@ utils.c utils.h
 libhbalinux_la_LDFLAGS = -version-info 2:2:0
 libhbalinux_la_LIBADD = $(PCIACCESS_LIBS)
 
-dist_noinst_DATA = README COPYING INSTALL libhbalinux.spec
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libhbalinux.pc
+
+dist_noinst_DATA = README COPYING INSTALL libhbalinux.pc.in libhbalinux.spec
 
 install-data-hook: libhbalinux.la
 	. $${PWD}/$<; \

@@ -11,6 +11,6 @@ AC_SUBST(PCIACCESS_LIBS)
 PKG_CHECK_MODULES(HBAAPI, HBAAPI)
 AC_SUBST(HBAAPI_CFLAGS)
 
-AC_CONFIG_FILES([Makefile libhbalinux.spec])
+AC_CONFIG_FILES([Makefile libhbalinux.spec libhbalinux.pc])
 AC_OUTPUT
 
