@@ -34,6 +34,10 @@ get_device_serial_number(struct pci_device *dev, struct hba_info *hba_info)
 	u_int32_t dword_high = 0;
 	int rc;
 
+	/* Default */
+	snprintf(hba_info->SerialNumber,
+		 sizeof(hba_info->SerialNumber),
+		 "Unknown");
 	/*
 	 * Read the Status Register in the PCIe configuration
 	 * header space to see if the PCI Capability List is
