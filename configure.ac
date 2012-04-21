@@ -1,4 +1,4 @@
-AC_INIT([libhbalinux], [1.0.13], [devel@open-fcoe.org])
+AC_INIT([libhbalinux], [1.0.14], [devel@open-fcoe.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AC_PROG_LIBTOOL
